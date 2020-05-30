@@ -10,7 +10,7 @@ namespace DoorRestartSystem
 	class EventHandlers
 	{
 		private CoroutineHandle coroutine;
-		private List<Door> fuckyDoors = new List<Door>();
+		private List<Door> brokenDoors = new List<Door>();
 		private List<Door> doors;
 		private bool isRestarting = false;
 		private bool isRoundStarted = false;
@@ -20,7 +20,7 @@ namespace DoorRestartSystem
 		public void OnRoundRestart()
 		{
 			Timing.KillCoroutines(coroutine);
-			fuckyDoors.Clear();
+			brokenDoors.Clear();
 			isRestarting = false;
 			isRoundStarted = false;
 		}
@@ -33,10 +33,10 @@ namespace DoorRestartSystem
 
 		public void OnRoundEnd() => isRoundStarted = false;
 
-		private IEnumerator<float> FuckDoor(Door door)
+		private IEnumerator<float> BreakDoor(Door door)
 		{
 			doors.Remove(door);
-			fuckyDoors.Add(door);
+			brokenDoors.Add(door);
 			yield return Timing.WaitForSeconds(0.7f);
 			if (isRestarting)
 			{
@@ -44,7 +44,7 @@ namespace DoorRestartSystem
 				door.Networklocked = !door.Networklocked;
 			}
 			doors.Add(door);
-			fuckyDoors.Remove(door);
+			brokenDoors.Remove(door);
 		}
 
 		private IEnumerator<float> StartSystem()
@@ -65,7 +65,7 @@ namespace DoorRestartSystem
 						while (isRestarting)
 						{
 							Door door = doors[UnityEngine.Random.Range(0, doors.Count)];
-							Timing.RunCoroutine(FuckDoor(door));
+							Timing.RunCoroutine(BreakDoor(door));
 							yield return Timing.WaitForSeconds(0.05f);
 						}
 						foreach (Door door in Map.Doors)
@@ -79,7 +79,7 @@ namespace DoorRestartSystem
 							door.NetworkisOpen = openDoors.Contains(door);
 							door.Networklocked = false;
 						}
-						fuckyDoors.Clear();
+						brokenDoors.Clear();
 					}
 				}
 			}
