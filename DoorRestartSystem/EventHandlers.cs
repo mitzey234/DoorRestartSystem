@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using EXILED;
-using EXILED.Extensions;
+﻿using System.Collections.Generic;
+using Exiled.API.Features;
+using Exiled.Events.EventArgs;
 using MEC;
-using UnityEngine;
 
 namespace DoorRestartSystem
 {
@@ -21,6 +19,7 @@ namespace DoorRestartSystem
 		{
 			Timing.KillCoroutines(coroutine);
 			brokenDoors.Clear();
+			doors.Clear();
 			isRestarting = false;
 			isRoundStarted = false;
 		}
@@ -31,7 +30,7 @@ namespace DoorRestartSystem
 			coroutine = Timing.RunCoroutine(StartSystem());
 		}
 
-		public void OnRoundEnd() => isRoundStarted = false;
+		public void OnRoundEnd(RoundEndedEventArgs ev) => isRoundStarted = false;
 
 		private IEnumerator<float> BreakDoor(Door door)
 		{
@@ -54,12 +53,12 @@ namespace DoorRestartSystem
 				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
 				if (UnityEngine.Random.Range(0, 100) < 50)
 				{
-					doors = Map.Doors;
-					if (!Map.IsNukeInProgress && !Map.IsNukeDetonated)
+					foreach (Door door in Map.Doors) doors.Add(door);
+					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
 						isRestarting = true;
 						Timing.CallDelayed(delay, () => isRestarting = false);
-						Cassie.CassieMessage("CRITICAL ERROR . . DOOR SYSTEM MALFUNCTION IN PROGRESS . . DOOR SYSTEM SOFTWARE REPAIR COMMENCING IN 3 . 2 . 1 . . . . . . . DOOR SYSTEM REPAIR COMPLETE", true, true);
+						Cassie.Message("CRITICAL ERROR . . DOOR SYSTEM MALFUNCTION IN PROGRESS . . DOOR SYSTEM SOFTWARE REPAIR COMMENCING IN 3 . 2 . 1 . . . . . . . DOOR SYSTEM REPAIR COMPLETE", true, true);
 						List<Door> openDoors = new List<Door>();
 						foreach (Door door in Map.Doors) if (door.NetworkisOpen) openDoors.Add(door);
 						while (isRestarting)
