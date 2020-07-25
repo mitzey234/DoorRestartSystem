@@ -8,6 +8,8 @@ namespace DoorRestartSystem
 
 		public override void OnEnabled()
 		{
+			if (!Config.IsEnabled) return;
+
 			ev = new EventHandlers();
 
 			Exiled.Events.Handlers.Server.RestartingRound+= ev.OnRoundRestart;
