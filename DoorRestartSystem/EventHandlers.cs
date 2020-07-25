@@ -9,7 +9,7 @@ namespace DoorRestartSystem
 	{
 		private CoroutineHandle coroutine;
 		private List<Door> brokenDoors = new List<Door>();
-		private List<Door> doors;
+		private List<Door> doors = new List<Door>();
 		private bool isRestarting = false;
 		private bool isRoundStarted = false;
 
