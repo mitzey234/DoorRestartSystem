@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs;
+using Interactables.Interobjects.DoorUtils;
 using MEC;
 
 namespace DoorRestartSystem
@@ -8,8 +9,8 @@ namespace DoorRestartSystem
 	class EventHandlers
 	{
 		private CoroutineHandle coroutine;
-		private List<Door> brokenDoors = new List<Door>();
-		private List<Door> doors = new List<Door>();
+		private List<DoorVariant> brokenDoors = new List<DoorVariant>();
+		private List<DoorVariant> doors = new List<DoorVariant>();
 		private bool isRestarting = false;
 		private bool isRoundStarted = false;
 
@@ -17,7 +18,7 @@ namespace DoorRestartSystem
 
 		public void OnRoundRestart()
 		{
-			Timing.KillCoroutines(coroutine);
+			Timing.KillCoroutines(new CoroutineHandle[] { coroutine });
 			brokenDoors.Clear();
 			doors.Clear();
 			isRestarting = false;
@@ -32,15 +33,15 @@ namespace DoorRestartSystem
 
 		public void OnRoundEnd(RoundEndedEventArgs ev) => isRoundStarted = false;
 
-		private IEnumerator<float> BreakDoor(Door door)
+		private IEnumerator<float> BreakDoor(DoorVariant door)
 		{
 			doors.Remove(door);
 			brokenDoors.Add(door);
 			yield return Timing.WaitForSeconds(0.7f);
 			if (isRestarting)
 			{
-				door.NetworkisOpen = !door.NetworkisOpen;
-				door.Networklocked = !door.Networklocked;
+				door.NetworkTargetState = !door.NetworkTargetState;
+				door.ServerChangeLock(DoorLockReason.AdminCommand, door.ActiveLocks > 0 ? false : true);
 			}
 			doors.Add(door);
 			brokenDoors.Remove(door);
@@ -48,40 +49,42 @@ namespace DoorRestartSystem
 
 		private IEnumerator<float> StartSystem()
 		{
-			while (isRoundStarted)
-			{
-				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
-				if (UnityEngine.Random.Range(0, 100) < 50)
-				{
-					foreach (Door door in Map.Doors) doors.Add(door);
+			//while (isRoundStarted)
+			//{
+			//yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
+			//if (UnityEngine.Random.Range(0, 100) < 50)
+			//{
+			yield return Timing.WaitForSeconds(5f);
+			Log.Warn("going");
+					foreach (DoorVariant door in Map.Doors) doors.Add(door);
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
 						isRestarting = true;
 						Timing.CallDelayed(delay, () => isRestarting = false);
 						Cassie.Message("CRITICAL ERROR . . DOOR SYSTEM MALFUNCTION IN PROGRESS . . DOOR SYSTEM SOFTWARE REPAIR COMMENCING IN 3 . 2 . 1 . . . . . . . DOOR SYSTEM REPAIR COMPLETE", true, true);
-						List<Door> openDoors = new List<Door>();
-						foreach (Door door in Map.Doors) if (door.NetworkisOpen) openDoors.Add(door);
+						List<DoorVariant> openDoors = new List<DoorVariant>();
+						foreach (DoorVariant door in Map.Doors) if (door.IsConsideredOpen()) openDoors.Add(door);
 						while (isRestarting)
 						{
-							Door door = doors[UnityEngine.Random.Range(0, doors.Count)];
+							DoorVariant door = doors[UnityEngine.Random.Range(0, doors.Count)];
 							Timing.RunCoroutine(BreakDoor(door));
 							yield return Timing.WaitForSeconds(0.05f);
 						}
-						foreach (Door door in Map.Doors)
+						foreach (DoorVariant door in Map.Doors)
 						{
-							door.NetworkisOpen = false;
-							door.Networklocked = true;
+							door.NetworkTargetState = false;
+							door.ServerChangeLock(DoorLockReason.AdminCommand, true);
 						}
 						yield return Timing.WaitForSeconds(3f);
-						foreach (Door door in Map.Doors)
+						foreach (DoorVariant door in Map.Doors)
 						{
-							door.NetworkisOpen = openDoors.Contains(door);
-							door.Networklocked = false;
+							door.NetworkTargetState = openDoors.Contains(door);
+							door.ServerChangeLock(DoorLockReason.AdminCommand, false);
 						}
 						brokenDoors.Clear();
 					}
-				}
-			}
+				//}
+			//}
 		}
 	}
 }
