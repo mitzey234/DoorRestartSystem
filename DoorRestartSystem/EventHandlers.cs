@@ -49,13 +49,11 @@ namespace DoorRestartSystem
 
 		private IEnumerator<float> StartSystem()
 		{
-			//while (isRoundStarted)
-			//{
-			//yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
-			//if (UnityEngine.Random.Range(0, 100) < 50)
-			//{
-			yield return Timing.WaitForSeconds(5f);
-			Log.Warn("going");
+			while (isRoundStarted)
+			{
+				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
+				if (UnityEngine.Random.Range(0, 100) < 50)
+				{
 					foreach (DoorVariant door in Map.Doors) doors.Add(door);
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
@@ -83,8 +81,8 @@ namespace DoorRestartSystem
 						}
 						brokenDoors.Clear();
 					}
-				//}
-			//}
+				}
+			}
 		}
 	}
 }
