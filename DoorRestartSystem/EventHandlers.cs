@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs;
 using Interactables.Interobjects.DoorUtils;
@@ -54,7 +55,8 @@ namespace DoorRestartSystem
 				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
 				if (UnityEngine.Random.Range(0, 100) < 50)
 				{
-					foreach (DoorVariant door in Map.Doors) doors.Add(door);
+					foreach (DoorVariant door in Map.Doors.Where(x => x.name != "Checkpoint Single")) doors.Add(door);
+
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
 						isRestarting = true;
