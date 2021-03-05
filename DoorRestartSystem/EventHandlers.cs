@@ -55,7 +55,9 @@ namespace DoorRestartSystem
 				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
 				if (UnityEngine.Random.Range(0, 100) < 50)
 				{
-					foreach (DoorVariant door in Map.Doors.Where(x => x.name != "Checkpoint Single")) doors.Add(door);
+					DoorVariant scp106door = DoorNametagExtension.NamedDoors["106_PRIMARY"].TargetDoor;
+					DoorVariant scp106door2 = DoorNametagExtension.NamedDoors["106_SECONDARY"].TargetDoor;
+					foreach (DoorVariant door in Map.Doors.Where(x => x.transform.position != scp106door.transform.position && x.transform.position != scp106door2.transform.position)) doors.Add(door);
 
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
