@@ -57,7 +57,7 @@ namespace DoorRestartSystem
 				{
 					DoorVariant scp106door = DoorNametagExtension.NamedDoors["106_PRIMARY"].TargetDoor;
 					DoorVariant scp106door2 = DoorNametagExtension.NamedDoors["106_SECONDARY"].TargetDoor;
-					foreach (Door door in Map.Doors.Where(x => x.Base.transform.position != scp106door.transform.position && x.Base.transform.position != scp106door2.transform.position)) doors.Add(door);
+					foreach (Door door in Map.Doors.Where(x => x.Base.transform.position != scp106door.transform.position && x.Base.transform.position != scp106door2.transform.position && x.Type != Exiled.API.Enums.DoorType.Scp079First && x.Type != Exiled.API.Enums.DoorType.Scp079Second)) doors.Add(door);
 
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
@@ -72,14 +72,15 @@ namespace DoorRestartSystem
 							Timing.RunCoroutine(BreakDoor(door));
 							yield return Timing.WaitForSeconds(0.05f);
 						}
-						foreach (Door door in Map.Doors)
+						foreach (Door door in Map.Doors.Where(d => d.Type != Exiled.API.Enums.DoorType.Scp079First && d.Type != Exiled.API.Enums.DoorType.Scp079Second))
 						{
 							door.Base.NetworkTargetState = false;
 							door.Base.ServerChangeLock(DoorLockReason.AdminCommand, true);
 						}
 						yield return Timing.WaitForSeconds(3f);
-						foreach (Door door in Map.Doors)
+						foreach (Door door in Map.Doors.Where(d => d.Type != Exiled.API.Enums.DoorType.Scp079First && d.Type != Exiled.API.Enums.DoorType.Scp079Second))
 						{
+							if ((door.DoorLockType == Exiled.API.Enums.DoorLockType.Lockdown079 || door.DoorLockType == Exiled.API.Enums.DoorLockType.Regular079) && door.IsLocked) continue;
 							door.Base.NetworkTargetState = openDoors.Contains(door);
 							door.Base.ServerChangeLock(DoorLockReason.AdminCommand, false);
 						}
