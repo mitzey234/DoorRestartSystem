@@ -48,6 +48,12 @@ namespace DoorRestartSystem
 			brokenDoors.Remove(door);
 		}
 
+		private bool is914MachineDoor (Door d)
+        {
+            if ((Room.Get(Exiled.API.Enums.RoomType.Lcz914).Position - d.Position).magnitude < 10 && d.Type != Exiled.API.Enums.DoorType.Scp914Gate && d.Type != Exiled.API.Enums.DoorType.Scp914Door) return true;
+			return false;
+        }
+        
 		private IEnumerator<float> StartSystem()
 		{
 			while (isRoundStarted)
@@ -57,7 +63,7 @@ namespace DoorRestartSystem
 				{
 					DoorVariant scp106door = DoorNametagExtension.NamedDoors["106_PRIMARY"].TargetDoor;
 					DoorVariant scp106door2 = DoorNametagExtension.NamedDoors["106_SECONDARY"].TargetDoor;
-					foreach (Door door in Door.List.Where(x => x.Base.transform.position != scp106door.transform.position && x.Base.transform.position != scp106door2.transform.position && x.Type != Exiled.API.Enums.DoorType.Scp079First && x.Type != Exiled.API.Enums.DoorType.Scp079Second)) doors.Add(door);
+					foreach (Door door in Door.List.Where(x => x.Base.transform.position != scp106door.transform.position && x.Base.transform.position != scp106door2.transform.position && x.Type != Exiled.API.Enums.DoorType.Scp079First && x.Type != Exiled.API.Enums.DoorType.Scp079Second && !is914MachineDoor(x))) doors.Add(door);
 
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
@@ -65,14 +71,15 @@ namespace DoorRestartSystem
 						Timing.CallDelayed(delay, () => isRestarting = false);
 						Cassie.Message("CRITICAL ERROR . . DOOR SYSTEM MALFUNCTION IN PROGRESS . . DOOR SYSTEM SOFTWARE REPAIR COMMENCING IN 3 . 2 . 1 . . . . . . . DOOR SYSTEM REPAIR COMPLETE", true, true);
 						List<Door> openDoors = new List<Door>();
-						foreach (Door door in Door.List) if (door.Base.IsConsideredOpen()) openDoors.Add(door);
+                        
+						foreach (Door door in Door.List) if (door.IsOpen) openDoors.Add(door);
 						while (isRestarting)
 						{
 							Door door = doors[UnityEngine.Random.Range(0, doors.Count)];
 							Timing.RunCoroutine(BreakDoor(door));
 							yield return Timing.WaitForSeconds(0.05f);
 						}
-						foreach (Door door in Door.List.Where(d => d.Type != Exiled.API.Enums.DoorType.Scp079First && d.Type != Exiled.API.Enums.DoorType.Scp079Second))
+						foreach (Door door in Door.List.Where(d => d.Type != Exiled.API.Enums.DoorType.Scp079First && d.Type != Exiled.API.Enums.DoorType.Scp079Second && !is914MachineDoor(d)))
 						{
 							door.Base.NetworkTargetState = false;
 							door.Base.ServerChangeLock(DoorLockReason.AdminCommand, true);
