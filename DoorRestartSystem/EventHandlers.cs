@@ -4,6 +4,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs;
 using Interactables.Interobjects.DoorUtils;
 using MEC;
+using UnityEngine;
 
 namespace DoorRestartSystem
 {
@@ -53,11 +54,23 @@ namespace DoorRestartSystem
 			while (isRoundStarted)
 			{
 				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
-				if (UnityEngine.Random.Range(0, 100) < 50)
+				if (Random.Range(0, 100) < 50)
 				{
 					DoorVariant scp106door = DoorNametagExtension.NamedDoors["106_PRIMARY"].TargetDoor;
 					DoorVariant scp106door2 = DoorNametagExtension.NamedDoors["106_SECONDARY"].TargetDoor;
-					foreach (Door door in Door.List.Where(x => x.Base.transform.position != scp106door.transform.position && x.Base.transform.position != scp106door2.transform.position && x.Type != Exiled.API.Enums.DoorType.Scp079First && x.Type != Exiled.API.Enums.DoorType.Scp079Second)) doors.Add(door);
+					Room room914 = Room.Get(Exiled.API.Enums.RoomType.Lcz914);
+					foreach (Door door in Door.List)
+					{
+						if (door.Base.transform.position != scp106door.transform.position &&
+						door.Base.transform.position != scp106door2.transform.position &&
+						door.Type != Exiled.API.Enums.DoorType.Scp079First &&
+						door.Type != Exiled.API.Enums.DoorType.Scp079Second &&
+						door.Type != Exiled.API.Enums.DoorType.Scp914 &&
+						Vector3.Distance(door.Position, room914.Position) >= 11f) // Specific offset for how far 914 doors are from the room center
+						{
+							doors.Add(door);
+						}
+					}
 
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
