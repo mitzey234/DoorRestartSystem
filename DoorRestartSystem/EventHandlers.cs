@@ -19,7 +19,7 @@ namespace DoorRestartSystem
 
 		public void OnRoundRestart()
 		{
-			Timing.KillCoroutines(new CoroutineHandle[] { coroutine });
+			Timing.KillCoroutines(coroutine);
 			brokenDoors.Clear();
 			doors.Clear();
 			isRestarting = false;
