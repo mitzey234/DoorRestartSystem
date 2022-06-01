@@ -16,7 +16,6 @@ namespace DoorRestartSystem
 
 			Exiled.Events.Handlers.Server.RestartingRound+= ev.OnRoundRestart;
 			Exiled.Events.Handlers.Server.RoundStarted += ev.OnRoundStart;
-			Exiled.Events.Handlers.Server.RoundEnded += ev.OnRoundEnd;
 		}
 
 		public override void OnDisabled()
@@ -25,7 +24,6 @@ namespace DoorRestartSystem
 
 			Exiled.Events.Handlers.Server.RestartingRound -= ev.OnRoundRestart;
 			Exiled.Events.Handlers.Server.RoundStarted -= ev.OnRoundStart;
-			Exiled.Events.Handlers.Server.RoundEnded -= ev.OnRoundEnd;
 
 			ev = null;
 		}

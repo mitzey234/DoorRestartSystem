@@ -14,7 +14,6 @@ namespace DoorRestartSystem
 		private List<Door> brokenDoors = new List<Door>();
 		private List<Door> doors = new List<Door>();
 		private bool isRestarting = false;
-		private bool isRoundStarted = false;
 
 		private const float delay = 15.03f;
 
@@ -24,16 +23,23 @@ namespace DoorRestartSystem
 			brokenDoors.Clear();
 			doors.Clear();
 			isRestarting = false;
-			isRoundStarted = false;
 		}
 
 		public void OnRoundStart()
 		{
-			isRoundStarted = true;
 			coroutine = Timing.RunCoroutine(StartSystem());
+			foreach (Door door in Door.List)
+			{
+				if (door.Type != Exiled.API.Enums.DoorType.Scp106Primary &&
+					door.Type != Exiled.API.Enums.DoorType.Scp106Secondary &&
+					door.Type != Exiled.API.Enums.DoorType.Scp079First &&
+					door.Type != Exiled.API.Enums.DoorType.Scp079Second &&
+					door.Type != Exiled.API.Enums.DoorType.Scp914Door)
+				{
+					doors.Add(door);
+				}
+			}
 		}
-
-		public void OnRoundEnd(RoundEndedEventArgs ev) => isRoundStarted = false;
 
 		private IEnumerator<float> BreakDoor(Door door)
 		{
@@ -51,53 +57,37 @@ namespace DoorRestartSystem
 
 		private IEnumerator<float> StartSystem()
 		{
-			while (isRoundStarted)
+			while (Round.IsStarted)
 			{
-				yield return Timing.WaitForSeconds(UnityEngine.Random.Range(480, 660));
+				yield return Timing.WaitForSeconds(Random.Range(480, 660));
 				if (Random.Range(0, 100) < 50)
 				{
-					DoorVariant scp106door = DoorNametagExtension.NamedDoors["106_PRIMARY"].TargetDoor;
-					DoorVariant scp106door2 = DoorNametagExtension.NamedDoors["106_SECONDARY"].TargetDoor;
-					Room room914 = Room.Get(Exiled.API.Enums.RoomType.Lcz914);
-					foreach (Door door in Door.List)
-					{
-						if (door.Base.transform.position != scp106door.transform.position &&
-						door.Base.transform.position != scp106door2.transform.position &&
-						door.Type != Exiled.API.Enums.DoorType.Scp079First &&
-						door.Type != Exiled.API.Enums.DoorType.Scp079Second &&
-						door.Type != Exiled.API.Enums.DoorType.Scp914 &&
-						Vector3.Distance(door.Position, room914.Position) >= 11f) // Specific offset for how far 914 doors are from the room center
-						{
-							doors.Add(door);
-						}
-					}
-
 					if (!Warhead.IsInProgress && !Warhead.IsDetonated)
 					{
 						isRestarting = true;
 						Timing.CallDelayed(delay, () => isRestarting = false);
 						Cassie.Message("CRITICAL ERROR . . DOOR SYSTEM MALFUNCTION IN PROGRESS . . DOOR SYSTEM SOFTWARE REPAIR COMMENCING IN 3 . 2 . 1 . . . . . . . DOOR SYSTEM REPAIR COMPLETE", true, true);
 						List<Door> openDoors = new List<Door>();
-						foreach (Door door in Door.List) if (door.Base.IsConsideredOpen()) openDoors.Add(door);
+						brokenDoors.Clear();
+						foreach (Door door in doors) if (door.Base.IsConsideredOpen()) openDoors.Add(door);
 						while (isRestarting)
 						{
-							Door door = doors[UnityEngine.Random.Range(0, doors.Count)];
+							Door door = doors[Random.Range(0, doors.Count)];
 							Timing.RunCoroutine(BreakDoor(door));
 							yield return Timing.WaitForSeconds(0.05f);
 						}
-						foreach (Door door in Door.List.Where(d => d.Type != Exiled.API.Enums.DoorType.Scp079First && d.Type != Exiled.API.Enums.DoorType.Scp079Second))
+						foreach (Door door in doors)
 						{
 							door.Base.NetworkTargetState = false;
 							door.Base.ServerChangeLock(DoorLockReason.AdminCommand, true);
 						}
 						yield return Timing.WaitForSeconds(3f);
-						foreach (Door door in Door.List.Where(d => d.Type != Exiled.API.Enums.DoorType.Scp079First && d.Type != Exiled.API.Enums.DoorType.Scp079Second))
+						foreach (Door door in doors)
 						{
 							if ((door.DoorLockType == Exiled.API.Enums.DoorLockType.Lockdown079 || door.DoorLockType == Exiled.API.Enums.DoorLockType.Regular079) && door.IsLocked) continue;
 							door.Base.NetworkTargetState = openDoors.Contains(door);
 							door.Base.ServerChangeLock(DoorLockReason.AdminCommand, false);
 						}
-						brokenDoors.Clear();
 					}
 				}
 			}
